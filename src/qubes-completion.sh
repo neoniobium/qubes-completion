@@ -1941,7 +1941,7 @@ function _qvm_pause() {
             ;;
     esac
 
-    local -r flags='--all --exclude'
+    local -r flags='--all --exclude -S --suspend'
     __complete_all_starting_flags_if_needed "${flags}" && return 0
 
     # NOTE: provide qube names indefinitely as the qvm-pause --help says
