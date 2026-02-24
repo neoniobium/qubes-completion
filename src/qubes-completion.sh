@@ -139,6 +139,7 @@ declare -a SUPPORTED_COMMANDS_LIST=(
     'qubes-policy-lint'         # R4.2. Tests: Basic # Features: 100% # No man
     'qubes-policy-editor'       # R4.2. Tests: Basic # Features: 100% # No man
     'qubes-update-gui'          # R4.2. Tests: Basic # Features: 100% # No man
+    'qubes-global-config'       # R4.3. Tests: Basic # Features: 100% # No man
 
      # Commands that have no --quiet/verbose
     'qubesctl'                  # R4.2. Tests: Basic # Features: 100%
@@ -174,7 +175,6 @@ declare -a SUPPORTED_COMMANDS_LIST=(
     # 'qubes-backup-restore'
     # 'qubes-backup'
     # 'qubes-template-manager'
-    # 'qubes-global-settings'
     # 'qubes-policy-editor-gui'
     # -----------------------------------------------------------
 
@@ -4446,6 +4446,43 @@ function _qubes_policy_editor() {
     # $VISUAL if previous entry is unset or 'vi' if previous entry
     # is also unset. Defaults to the user file.
 
+    return 0
+}
+
+
+function _qubes_global_config() {
+
+    local -r flags='--help -h --help-all --help-gapplication --help-gtk --g-fatal-warnings -o --open-at --class --display --name --gtk-module'
+    __init_qubes_completion "${flags}" || return 0
+
+    case "${QB_prev_flag}" in
+        -o | --open-at)
+            __complete_string 'general usb device updates splitgpg clipboard file url thisdevice'
+            return 0
+            ;;
+        --display)
+            # No completion for display
+            return 0
+            ;;
+        --class)
+            # no completion for class
+            return 0
+            ;;
+        --name)
+            # no completion for name
+            return 0
+            ;;
+        --gtk-module)
+            # no completion for gtk-module
+            return 0
+            ;;
+        ?*)
+            # unknown prev flag expects sub-argument
+            return 0
+            ;;
+    esac
+
+    __complete_string "${flags}"
     return 0
 }
 
