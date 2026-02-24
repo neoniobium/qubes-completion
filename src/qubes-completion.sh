@@ -46,7 +46,7 @@ QVM_VM_CLASSES='AdminVM AppVM DispVM StandaloneVM TemplateVM'
 # Prefs are defined here to avoid duplication, because they are used by qvm-prefs and qvm-ls
 QVM_VM_PROPERTIES_BOOL='autostart debug template_for_dispvms include_in_backups provides_network installed_by_rpm updateable'
 QVM_VM_PROPERTIES_QUBE='audiovm default_dispvm netvm template guivm management_dispvm'
-QVM_VM_PROPERTIES_STRING='default_user ip kernel kernelopts mac maxmem memory name qrexec_timeout stubdom_mem stubdom_xid vcpus backup_timestamp dns gateway gateway6 icon ip6 keyboard_layout qid shutdown_timeout start_time uuid visible_gateway visible_gateway6 visible_ip visible_ip6 visible_netmask xid'
+QVM_VM_PROPERTIES_STRING='bootmode default_user devices_denied ip kernel kernelopts mac maxmem memory name qrexec_timeout stubdom_mem stubdom_xid vcpus backup_timestamp dns gateway gateway6 icon ip6 keyboard_layout qid shutdown_timeout start_time stubdom_uuid uuid visible_gateway visible_gateway6 visible_ip visible_ip6 visible_netmask xid'
 QVM_VM_PROPERTIES_CUSTOM='label virt_mode klass'
 QVM_VM_PROPERTIES_ALL="${QVM_VM_PROPERTIES_BOOL} ${QVM_VM_PROPERTIES_QUBE} ${QVM_VM_PROPERTIES_STRING} ${QVM_VM_PROPERTIES_CUSTOM}"
 QVM_VM_PROPERTIES_DOM0='default_dispvm icon include_in_backups keyboard_layout klass label name qid updateable uuid'
