@@ -42,6 +42,7 @@ QVM_COMPLETION_ALL_BASIC='--verbose -v --quiet -q --help -h'
 # cSpell:disable
 QVM_COMMON_TAGS='audiovm-dom0 created-by-dom0 guivm-dom0 anon-vm anon-gateway whonix-updatevm debian'
 QVM_VM_CLASSES='AdminVM AppVM DispVM StandaloneVM TemplateVM'
+QVM_VM_LABELS='red orange yellow green gray blue purple black'
 
 # Prefs are defined here to avoid duplication, because they are used by qvm-prefs and qvm-ls
 QVM_VM_PROPERTIES_BOOL='autostart debug template_for_dispvms include_in_backups provides_network installed_by_rpm updateable'
@@ -51,16 +52,22 @@ QVM_VM_PROPERTIES_CUSTOM='label virt_mode klass'
 QVM_VM_PROPERTIES_ALL="${QVM_VM_PROPERTIES_BOOL} ${QVM_VM_PROPERTIES_QUBE} ${QVM_VM_PROPERTIES_STRING} ${QVM_VM_PROPERTIES_CUSTOM}"
 QVM_VM_PROPERTIES_DOM0='default_dispvm icon include_in_backups keyboard_layout klass label name qid updateable uuid'
 
+# Features are defined here to avoid duplication, because they are used by qvm-features and qvm-ls
+# TODO: Refactor with _qvm_ls_features
+QVM_VM_FEATURES_ALL=''
+
 QVM_VM_PROPERTY_VALUES_GENERIC_BOOL='True true on 1 False false off 0'
 QVM_VM_PROPERTY_VALUES_FOR_VIRTMODE='hvm pv pvh'
 QVM_VM_PROPERTY_VALUES_FOR_KLASS="${QVM_VM_CLASSES}"
-QVM_VM_PROPERTY_VALUES_FOR_LABEL='red orange yellow green gray blue purple black'
+QVM_VM_PROPERTY_VALUES_FOR_LABEL="${QVM_VM_LABELS}"
 
 # We use this list of flags to remove from line before passing to dnf completion (no --help here, because dnf also has it)
 QVM_QUBES_DOM0_UPDATE_FLAGS_HIDE_FROM_DNF='--clean --check-only --gui --force-xen-upgrade --console --show-output --preserve-terminal --skip-boot-check'
 
 # NOTE: class `testclass` is not on the list as it is not documenteted at all
 QVM_DEVICE_CLASSES='block mic pci usb'
+
+QVM_LS_COLUMNS="${QVM_VM_PROPERTIES_ALL} CLASS DISK FLAGS GATEWAY MEMORY PRIV-CURR PRIV-MAX PRIV-POOL PRIV-USED ROOT-CURR ROOT-MAX ROOT-POOL ROOT-USED STATE"
 
 # Tools to use for getting data for completion
 QVMTOOL_QVM_FIREWALL='qvm-firewall'
@@ -1633,40 +1640,81 @@ function __complete_all_starting_flags_if_needed() {
 }
 
 
+function __complete_qvm_ls_fields() {
+    # Complete comma separated list
+    local last_qube_name_typing="${QB_cur##*,}"
+    # strip quotes at the beginning
+    last_qube_name_typing="$( __strip_quotes_on_left "${last_qube_name_typing}" )"
+    readonly last_qube_name_typing
+
+    # __debug_msg "last_qube_name_typing = \"${last_qube_name_typing}\""
+
+    # NOTE: Additionally any VM property may be used as a column, see qvm-prefs --help-properties for available values
+    # cSpell:disable-next-line
+
+    # NOTE: we save the original QB_real_cur value and return it back, should work even without it
+    local -r saved_QB_real_cur="${QB_real_cur}"     # save original QB_real_cur just in case
+    #
+        # We have to manually set QB_real_cur, because comma is non-standard separator
+        QB_real_cur="${last_qube_name_typing}"
+        __complete_string "${QVM_LS_COLUMNS}"
+    #
+    QB_real_cur="${saved_QB_real_cur}"           # return the original value of QB_real_cur back
+
+    # Nospace because it is comma separated
+    compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
+}
+
+
+function __complete_qvm_ls_features() {
+    # TODO: Only suggets field names, no field values
+    # Space separated list of features feature=<value>
+    __complete_string "${QVM_VM_FEATURES_ALL// /= }"
+    # Nospace because it is '=' separated
+    compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
+}
+
+
+function __complete_qvm_ls_prefs() {
+    # TODO: Only suggets field names, no field values
+    # Space separated list of prefs=<value>
+    __complete_string "${QVM_VM_PROPERTIES_ALL// /= }"
+    # Nospace because it is '=' separated
+    compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
+}
+
 function _qvm_ls() {
 
-    __init_qubes_completion '-o --format -O --fields --exclude' '--tags' || return 0
+    local -r flags_with_argument='-o --format -O --fields --sort --exclude --tags --exclude-tags --class --label --template-source --netvm-is --internal --servicevm --features --prefs'
+    local -r flags_without_argument='--help-columns --help-formats --all --running --paused --halted --raw-data --raw-list --tree -t --disk -d --network -n --kernel -k --spinner --no-spinner --reverse --ignore-case --pending-update'
+    __init_qubes_completion "${flags_with_argument}" || return 0
 
     case "${QB_prev_flag}" in
         -o | --format)
-            local -r qvm_ls_formats='disk full kernel network simple'
+            local -r qvm_ls_formats='disk full kernel network prefs simple'
             __complete_string "${qvm_ls_formats}"
             return 0
             ;;
         -O | --fields)
-            # Complete comma separated list
-            local last_qube_name_typing="${QB_cur##*,}"
-            # strip quotes at the beginning
-            last_qube_name_typing="$( __strip_quotes_on_left "${last_qube_name_typing}" )"
-            readonly last_qube_name_typing
-
-            # __debug_msg "last_qube_name_typing = \"${last_qube_name_typing}\""
-
-            # NOTE: Additionally any VM property may be used as a column, see qvm-prefs --help-properties for available values
-            # cSpell:disable-next-line
-            local -r qvm_ls_columns="${QVM_VM_PROPERTIES_ALL} CLASS DISK FLAGS GATEWAY MEMORY PRIV-CURR PRIV-MAX PRIV-USED ROOT-CURR ROOT-MAX ROOT-USED STATE"
-
-            # NOTE: we save the original QB_real_cur value and return it back, should work even without it
-            local -r saved_QB_real_cur="${QB_real_cur}"     # save original QB_real_cur just in case
-            #
-                # We have to manually set QB_real_cur, because comma is non-standard separator
-                QB_real_cur="${last_qube_name_typing}"
-                __complete_string "${qvm_ls_columns}"
-            #
-            QB_real_cur="${saved_QB_real_cur}"           # return the original value of QB_real_cur back
-
-            # Nospace because it is comma separated
-            compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
+            __complete_qvm_ls_fields
+            return 0
+            ;;
+        --features)
+            __complete_qvm_ls_features
+            return 0
+            ;;
+        --prefs)
+            __complete_qvm_ls_prefs
+            return 0
+            ;;
+        --class)
+            # Space separated list of classes
+            __complete_string "${QVM_VM_CLASSES}"
+            return 0
+            ;;
+        --label)
+            # Space separated list of labels
+            __complete_string "${QVM_VM_LABELS}"
             return 0
             ;;
         --tags)
@@ -1674,8 +1722,34 @@ function _qvm_ls() {
             __complete_string "${QVM_COMMON_TAGS}"
             return 0
             ;;
+        --exclude-tags)
+            # Space separated list of tags
+            __complete_string "${QVM_COMMON_TAGS}"
+            return 0
+            ;;
+        --template-source)
+            # Space separated list of templates
+            __complete_qubes_list  'all' 'TemplateVM'
+            return 0
+            ;;
         --exclude)
+            # Space separated list of qubes
             __complete_qubes_list 'all'
+            return 0
+            ;;
+        --netvm-is)
+            # Space separated list of qubes
+            __complete_qubes_list 'all'
+            return 0
+            ;;
+        --internal | --servicevm)
+            # Simple boolean (y/n) argument
+            __complete_string 'y n'
+            return 0
+            ;;
+        --sort)
+            # Sort by any common column
+            __complete_string "${QVM_LS_COLUMNS}"
             return 0
             ;;
         ?*)
@@ -1684,18 +1758,29 @@ function _qvm_ls() {
             ;;
     esac
 
-    local -r flags='--help-columns --help-formats --all \
-        --exclude --format -o --fields -O --tags --running --paused --halted \
-        --raw-data --raw-list --tree -t --disk -d --network -n --kernel -k \
-        --spinner --no-spinner'
-    __complete_all_starting_flags_if_needed "${flags}" && return 0
+    __complete_all_starting_flags_if_needed "${flags_without_argument} ${flags_with_argument}" && return 0
 
-    # NOTE: In man qvm-ls there is a bug - it does not mention possibility
-    # to provide standalone args qube names after command, while --help shows it.
-
-    # So, we provide qube names:
-    __complete_qubes_list 'all'
-
+    if (( QB_alone_args_count == 0 )); then
+        if __was_flag_used '--prefs'; then
+            __complete_qvm_ls_prefs
+        elif __was_flag_used '--features'; then
+            __complete_qvm_ls_features
+        elif __was_flag_used '--tags' || __was_flag_used '--exclude-tags'; then
+            __complete_string "${QVM_COMMON_TAGS}"
+        elif __was_flag_used '--template-source'; then
+            __complete_qubes_list  'all' 'TemplateVM'
+        elif __was_flag_used '--class'; then
+            __complete_string "${QVM_VM_CLASSES}"
+        elif __was_flag_used '--label'; then
+            __complete_string "${QVM_VM_LABELS}"
+        else
+            # Space separated list of qubes
+            __complete_qubes_list 'all'
+        fi
+    elif (( QB_alone_args_count > 0 )); then
+        # Space separated list of qubes
+        __complete_qubes_list 'all'
+    fi
     return 0
 }
 
