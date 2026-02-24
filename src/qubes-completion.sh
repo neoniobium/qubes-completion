@@ -139,6 +139,7 @@ declare -a SUPPORTED_COMMANDS_LIST=(
     'qubes-policy-lint'         # R4.2. Tests: Basic # Features: 100% # No man
     'qubes-policy-editor'       # R4.2. Tests: Basic # Features: 100% # No man
     'qubes-update-gui'          # R4.2. Tests: Basic # Features: 100% # No man
+    'qubes-create'              # R4.3. Tests: Basic # Features: 100% # No man
 
      # Commands that have no --quiet/verbose
     'qubesctl'                  # R4.2. Tests: Basic # Features: 100%
@@ -201,7 +202,6 @@ declare -a SUPPORTED_COMMANDS_LIST=(
     # 'qubes-policy-admin'
     # 'qubes-log-viewer'        # Takes file. No docs nor --help
     # 'qubes-vm-create'         # Takes file. No docs nor --help
-    # 'qubes-create'            # No documentation nor actual command line arguments
     # 'qubesd'
     # -----------------------------------------------------------
 
@@ -4328,6 +4328,16 @@ function _qubes_fwupdmgr() {
 
     # NOTE: it does not support --help and -h after standalone arg
     __complete_string "--whonix --device --url"
+
+    return 0
+}
+
+
+function _qubes_create() {
+
+    __init_qubes_completion '--exclude'  || return 0
+
+    __complete_all_starting_flags_if_needed '' && return 0
 
     return 0
 }
