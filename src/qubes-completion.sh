@@ -103,6 +103,8 @@ declare -a SUPPORTED_COMMANDS_LIST=(
 
     'qvm-volume'                # R4.2. Tests: Basic # Features: 100% # but can be better
 
+    'qvm-notes'                # R4.3. Tests: Basic # Features: 100%
+
     'qvm-backup'                # R4.2. Tests: Basic # Features: 100%
     'qvm-backup-restore'        # R4.2. Tests: Basic # Features: 100%
 
@@ -2578,6 +2580,51 @@ function _qvm_volume() {
     fi
 
     return 0
+}
+
+
+function _qvm_notes() {
+
+    local -r flags_require_zero='-e --edit -p --print -d --delete'
+    local -r flags_require_one='-i --import -s --set  --append'
+
+    __init_qubes_completion "${flags_require_one}" || return 0
+
+    if (( QB_alone_args_count == 0 )); then
+        # If no qube is provided
+        local -r flags='-f --force'
+
+        __complete_all_starting_flags_if_needed "${flags}" && return 0
+
+        # Provide single qube name
+        __complete_qubes_list_without_dom0 'all'
+        return 0
+    else
+        # If one qube is provided
+
+        case "${QB_prev_flag}" in
+            -i | --import)
+                # Provide filename to import notes from
+                __run_filedir
+                return 0
+                ;;
+            -s | --set | --append)
+                # Do provide any completion
+                return 0
+                ;;
+            ?*)
+                # unknown prev flag expects sub-argument
+                return 0
+                ;;
+        esac
+        # TODO: Completion could be stopped if one non-basic flag is provided
+
+        # Do not provide --quit, --version and --help here
+        __complete_string "${flags_require_zero} ${flags_require_one}"  || return 0
+        return 0
+
+    fi
+
 }
 
 
