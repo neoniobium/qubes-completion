@@ -2083,6 +2083,89 @@ function __prepare_device_completion() {
 }
 
 
+function __complete_device_option() {
+
+    local -r device_class="${1}"
+
+    # if only one = char and not from the beginning
+    # then it's a proper option=value candidate
+    if [[ "${QB_cur}" == *=*=* ]]; then
+        # not a valid option=value candidate, too many = chars
+        return 0
+    fi
+
+    case "${device_class}" in
+        block)
+
+            if [[ "${QB_cur}" == *?=* ]]; then
+
+                local option_name="${QB_cur%%=*}"
+                option_name="$( __strip_quotes "${option_name}" )"
+                # local option_value="${QB_cur#*=}"
+                readonly option_name
+                ## __debug_msg "option_name = ${option_name}"
+
+                case "${option_name}" in
+                    frontend-dev)
+                        # cSpell:disable-next-line
+                        __complete_string 'xvda xvdb xvdc xvdd xvde xvdf xvdj xvdh xvdi xvdj xvdk xvdl xvdm xvdn xvdo xvdp xvdq xvdr xvds xvdt xvdu xvdv xvdw xvdx xvdy xvdz'
+                        return 0
+                        ;;
+                    read-only)
+                        __complete_string 'yes no'
+                        return 0
+                        ;;
+                    devtype)
+                        __complete_string 'disk cdrom'
+                        return 0
+                        ;;
+                    *)
+                        return 0
+                        ;;
+                esac
+            else
+                __complete_string 'frontend-dev= read-only= devtype='
+                compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
+                return 0
+            fi
+            ;;
+
+        pci)
+
+            if [[ "${QB_cur}" == *?=* ]]; then
+
+                local option_name="${QB_cur%%=*}"
+                option_name="$( __strip_quotes "${option_name}" )"
+                # local option_value="${QB_cur#*=}"
+                readonly option_name
+                ## __debug_msg "option_name = ${option_name}"
+
+                case "${option_name}" in
+                    no-strict-reset)
+                        __complete_string 'True False'
+                        return 0
+                        ;;
+                    permissive)
+                        __complete_string 'True False'
+                        return 0
+                        ;;
+                    *)
+                        return 0
+                        ;;
+                esac
+            else
+                __complete_string 'no-strict-reset= permissive='
+                compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
+                return 0
+            fi
+            ;;
+        *)
+            # usb and mic does not support options
+            return 0
+            ;;
+    esac
+}
+
 function __process_device_completion() {
 
     local -r device_class="${1}"
@@ -2116,7 +2199,7 @@ function __process_device_completion() {
         # Short duplicate versions 'ls l at a dt d' are not provided
         # because they interfere typing long and proper ones,
         # and are too short for completion to be used anyway.
-        __complete_string 'list attach detach'
+        __complete_string 'list attach detach info assign unassign'
         return 0
     fi
 
@@ -2135,7 +2218,7 @@ function __process_device_completion() {
                         ;;
                 esac
 
-                local -r flags='--all --exclude'
+                local -r flags='--all --exclude --with-sbdf --resolve-paths --assignments -s'
                 __complete_all_flags_if_needed "${flags}" && return 0
             fi
 
@@ -2151,84 +2234,8 @@ function __process_device_completion() {
 
                 case "${QB_prev_flag}" in
                     --option | -o)
-
-                        # if only one = char and not from the beginning
-                        # then it's a proper option=value candidate
-                        if [[ "${QB_cur}" == *=*=* ]]; then
-                            # not a valid option=value candidate, too many = chars
-                            return 0
-                        fi
-
-                        case "${device_class}" in
-                            block)
-
-                                if [[ "${QB_cur}" == *?=* ]]; then
-
-                                    local option_name="${QB_cur%%=*}"
-                                    option_name="$( __strip_quotes "${option_name}" )"
-                                    # local option_value="${QB_cur#*=}"
-                                    readonly option_name
-                                    ## __debug_msg "option_name = ${option_name}"
-
-                                    case "${option_name}" in
-                                        frontend-dev)
-                                            # cSpell:disable-next-line
-                                            __complete_string 'xvda xvdb xvdc xvdd xvde xvdf xvdj xvdh xvdi xvdj xvdk xvdl xvdm xvdn xvdo xvdp xvdq xvdr xvds xvdt xvdu xvdv xvdw xvdx xvdy xvdz'
-                                            return 0
-                                            ;;
-                                        read-only)
-                                            __complete_string 'yes no'
-                                            return 0
-                                            ;;
-                                        devtype)
-                                            __complete_string 'disk cdrom'
-                                            return 0
-                                            ;;
-                                        *)
-                                            return 0
-                                            ;;
-                                    esac
-                                else
-                                    __complete_string 'frontend-dev= read-only= devtype='
-                                    compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
-                                    return 0
-                                fi
-                                ;;
-
-                            pci)
-
-                                if [[ "${QB_cur}" == *?=* ]]; then
-
-                                    local option_name="${QB_cur%%=*}"
-                                    option_name="$( __strip_quotes "${option_name}" )"
-                                    # local option_value="${QB_cur#*=}"
-                                    readonly option_name
-                                    ## __debug_msg "option_name = ${option_name}"
-
-                                    case "${option_name}" in
-                                        no-strict-reset)
-                                            __complete_string 'True False'
-                                            return 0
-                                            ;;
-                                        permissive)
-                                            __complete_string 'True False'
-                                            return 0
-                                            ;;
-                                        *)
-                                            return 0
-                                            ;;
-                                    esac
-                                else
-                                    __complete_string 'no-strict-reset= permissive='
-                                    compopt -o nospace &>/dev/null # to /dev/null because output interferes with running tests
-                                    return 0
-                                fi
-                                ;;
-                            *)
-                                # usb and mic does not support options
-                                return 0
-                                ;;
-                        esac
+                        __complete_device_option  "${device_class}"
+                        return 0
                         ;;
                     ?*)
                         # unknown prev flag expects sub-argument
@@ -2263,10 +2270,11 @@ function __process_device_completion() {
             ;;
 
         detach | dt | d)
-
             if [[ "${qube_name}" == '' ]]; then
 
                 __is_prev_flag_not_empty && return 0; # unknown prev flag expects sub-argument (e.g. --unknown_flag=)
+
+                __complete_all_flags_if_needed '' && return 0
 
                 __complete_qubes_list 'all'
 
@@ -2281,6 +2289,75 @@ function __process_device_completion() {
             fi
 
             # no more arguments are allowed
+            return 0
+            ;;
+        assign | s)
+            if [[ "${qube_name}" == '' ]]; then
+
+                case "${QB_prev_flag}" in
+                    --option | -o)
+                        __complete_device_option  "${device_class}"
+                        return 0
+                        ;;
+                    ?*)
+                        # unknown prev flag expects sub-argument
+                        return 0
+                        ;;
+                esac
+
+                __is_prev_flag_not_empty && return 0; # unknown prev flag expects sub-argument (e.g. --unknown_flag=)
+
+                local -r flags='--ro --ask --ask-to-attach --required -r --port --only-port --device --only-device --option -o'
+                __complete_all_flags_if_needed "${flags}" && return 0
+
+                __complete_qubes_list 'all'
+                return 0
+
+            elif [[ "${extra_argument}" == '' ]]; then
+
+                __is_prev_flag_not_empty && return 0; # unknown prev flag expects sub-argument (e.g. --unknown_flag=)
+
+                __complete_device_ids "${device_class}" ''
+                return 0
+            fi
+
+            # no more arguments are allowed
+            return 0
+            ;;
+        unassign | u)
+            if [[ "${qube_name}" == '' ]]; then
+
+                __is_prev_flag_not_empty && return 0; # unknown prev flag expects sub-argument (e.g. --unknown_flag=)
+
+                local -r flags='--port --only-port --device --only-device'
+                __complete_all_flags_if_needed "${flags}" && return 0
+
+                __complete_qubes_list 'all'
+
+                return 0
+
+            elif [[ "${extra_argument}" == '' ]]; then
+
+                __is_prev_flag_not_empty && return 0; # unknown prev flag expects sub-argument (e.g. --unknown_flag=)
+
+                __complete_device_ids "${device_class}" "${qube_name}"
+                return 0
+            fi
+
+            # no more arguments are allowed
+            return 0
+            ;;
+        info | i)
+            # NOTE: qube_name is always the third so use it here as well
+            # despite not being a Qubes name but a device id
+            if [[ "${qube_name}" == '' ]]; then
+                __is_prev_flag_not_empty && return 0; # unknown prev flag expects sub-argument (e.g. --unknown_flag=)
+
+                __complete_all_flags_if_needed '' && return 0
+
+                __complete_device_ids "${device_class}" ''
+                return 0
+            fi
             return 0
             ;;
     esac
