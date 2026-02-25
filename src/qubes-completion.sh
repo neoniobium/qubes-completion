@@ -134,6 +134,7 @@ declare -a SUPPORTED_COMMANDS_LIST=(
     # New commands
     'qubes-vm-update'           # R4.2. Tests: Basic # Features: 100%
     'qubes-fwupdmgr'            # R4.2. Tests: Basic # Features: 100% # NOTE: Does not run without root even for --help. And has no man.
+    'qubes-device-agent'        # R4.3. Tests: Basic # Features: 100%, No man
     'qubes-prepare-vm-kernel'   # R4.2. Tests: Basic # Features: 100%
     'qubes-app-menu'            # R4.2. Tests: Basic # Features: 100% # No man, GUI app
     'qubes-policy-lint'         # R4.2. Tests: Basic # Features: 100% # No man
@@ -4328,6 +4329,42 @@ function _qubes_fwupdmgr() {
 
     # NOTE: it does not support --help and -h after standalone arg
     __complete_string "--whonix --device --url"
+
+    return 0
+}
+
+
+function _qubes_device_agent() {
+
+    # NOTE: This command does not support --quiet and --verbose args.
+    # So, we have to do things manually
+
+    local -r flags_require_zero='-h --help'
+    local -r flags_require_one='-s --socket-path'
+
+    __init_qubes_completion "${flags_require_one}" || return 0
+
+    if (( QB_alone_args_count == 0 )); then
+
+        # Only flags are allowed.
+        # Disable completion if standalone found
+
+        case "${QB_prev_flag}" in
+            -s | --socket-path)
+                __run_filedir
+                return 0
+                ;;
+            ?*)
+                # unknown prev flag expects sub-argument
+                return 0
+                ;;
+        esac
+
+        # No need to check __need_flags, because command expects only flags
+        __complete_string "${flags_require_zero} ${flags_require_one}"
+
+        return 0
+    fi
 
     return 0
 }
