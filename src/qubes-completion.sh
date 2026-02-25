@@ -136,6 +136,7 @@ declare -a SUPPORTED_COMMANDS_LIST=(
     'qubes-fwupdmgr'            # R4.2. Tests: Basic # Features: 100% # NOTE: Does not run without root even for --help. And has no man.
     'qubes-prepare-vm-kernel'   # R4.2. Tests: Basic # Features: 100%
     'qubes-app-menu'            # R4.2. Tests: Basic # Features: 100% # No man, GUI app
+    'qubes-new-qube'            # R4.3. Tests: Basic # Features: 100% # No man, GUI app
     'qubes-policy-lint'         # R4.2. Tests: Basic # Features: 100% # No man
     'qubes-policy-editor'       # R4.2. Tests: Basic # Features: 100% # No man
     'qubes-update-gui'          # R4.2. Tests: Basic # Features: 100% # No man
@@ -4396,6 +4397,43 @@ function _qubes_app_menu() {
         return 0
     fi
 
+    return 0
+}
+
+
+function _qubes_new_qube() {
+
+    # NOTE: This command does not support --quiet and --verbose args.
+    # So, we have to do things manually
+
+    local -r flags_require_zero='--help -h --help-all --help-gapplication --help-gtk --g-fatal-warnings --gapplication-service'
+    local -r flags_require_one='--class --name --gtk-module --display'
+    __init_qubes_completion "${flags_require_one}" || return 0
+
+    case "${QB_prev_flag}" in
+        --class)
+            # no completion for class
+            return 0
+            ;;
+        --name)
+            # no completion for name
+            return 0
+            ;;
+        --gtk-module)
+            # no completion for gtk-module
+            return 0
+            ;;
+        --display)
+            # No completion for display
+            return 0
+            ;;
+        ?*)
+            # unknown prev flag expects sub-argument
+            return 0
+            ;;
+    esac
+
+    __complete_string "${flags_require_zero} ${flags_require_one}"
     return 0
 }
 
